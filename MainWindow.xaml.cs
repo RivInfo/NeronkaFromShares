@@ -18,12 +18,18 @@ namespace NeronkaFromShares
 {
     public partial class MainWindow : Window
     {
+        public static List<MainWindow> MainWindows = new List<MainWindow>();
+
+        public static event Action<List<MainWindow>> UpdateMainWindowsCount;
+
         private string _fileName;
 
         private DBDataLoader _dBDataLoader;
 
-        private DateTime _startDate = new DateTime(1900, 1, 1);
+        private DateTime _startDate = new DateTime(2000, 1, 1);
         private DateTime _endDate = DateTime.Now;
+
+        public HistoricCandleToDB[] GetHistoricCandles => _dBDataLoader?.GetHistoricslCandles;
 
         public MainWindow()
         {
@@ -46,8 +52,6 @@ namespace NeronkaFromShares
 
         private void ButtonLoadData(object sender, RoutedEventArgs e)
         {
-            //добавить
-            //ограничения по датам с какого по какое
             if (int.TryParse(MinimumValue.Text, out int minVal))
                 _dBDataLoader = new DBDataLoader(_startDate, _endDate, _fileName, TableName.Text, minVal);
             else
@@ -101,7 +105,23 @@ namespace NeronkaFromShares
 
         private void OpenMLWindow(object sender, RoutedEventArgs e)
         {
+            Window1 window1 = new Window1();
+            window1.Show();
+        }
 
+        private void DataWindowLoad(object sender, RoutedEventArgs e)
+        {
+            MainWindows.Add(this);
+
+            Title = "Окно загрузки данных: "+ MainWindows.Count.ToString() +" - " + GetHashCode();
+
+            UpdateMainWindowsCount?.Invoke(MainWindows);
+        }
+
+        private void DataWindowUnloadoad(object sender, RoutedEventArgs e)
+        {
+            MainWindows.Remove(this);
+            UpdateMainWindowsCount?.Invoke(MainWindows);
         }
     }
 }

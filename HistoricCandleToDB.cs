@@ -2,7 +2,8 @@
 
 public struct HistoricCandleToDB
 {
-    public HistoricCandleToDB(/*string time*/DateTime time, float open, float close, float high, float low, long volume)
+    public HistoricCandleToDB(/*string time*/DateTime time, float open, 
+        float close, float high, float low, long volume)
     {
         Time = time;
         Open = open;
