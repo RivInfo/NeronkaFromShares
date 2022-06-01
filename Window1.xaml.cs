@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -21,6 +22,12 @@ namespace NeronkaFromShares
         private int _dataPredictionRows = 1;
 
         private DataConvertToML _dataTraining;
+        private DataConvertToML _dataTesting;
+
+        private MlModel _mlModel;
+
+        private DateTime _timeModelCreatidStart;
+        private DateTime _timeModelCreatidEnd;
 
         public Window1()
         {
@@ -99,32 +106,137 @@ namespace NeronkaFromShares
             }
         }
 
-        private void ConvertTrainingData(object sender, RoutedEventArgs e)
+        private async void ConvertTrainingData(object sender, RoutedEventArgs e)
+        {
+            //if (DataLoaderComboBox.SelectedIndex == -1)
+            //{
+            //    MessageBox.Show("Неоткуда брать данные! (укажите окно загрузки данных сверху)");
+            //    return;
+            //}
+
+            //PrintLog("Начата обработка Тренировачных данных");
+
+            //_dataTraining = new DataConvertToML(MainWindow.
+            //    MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
+            //    _dayPrdictionValue, _dataPredictionRows);
+
+            //PrintDataConvertid(_dataTraining);
+
+            //PrintLog("Обработка Тренировачных данных окончена: " + _dataTraining.GetSharisMLData.Length);
+
+            /*await*/ DataConvertLoad(ref _dataTraining, "Тренировачных");
+        }
+
+        private /*async*/ void ConvertTastingData(object sender, RoutedEventArgs e)
+        {
+            //if (DataLoaderComboBox.SelectedIndex == -1)
+            //{
+            //    MessageBox.Show("Неоткуда брать данные! (укажите окно загрузки данных сверху)");
+            //    return;
+            //}
+
+            //PrintLog("Начата обработка Тестовых данных");
+
+            //_dataTesting = new DataConvertToML(MainWindow.
+            //    MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
+            //    _dayPrdictionValue, _dataPredictionRows);
+
+            //PrintDataConvertid(_dataTesting);
+
+            //PrintLog("Обработка Тестовых данных окончена: " + _dataTesting.GetSharisMLData.Length);
+
+            /*await*/ DataConvertLoad(ref _dataTesting, "Тестовых");
+        }
+
+        private /*async Task*/ void DataConvertLoad(ref DataConvertToML dataConvert, string dataName)
         {
             if (DataLoaderComboBox.SelectedIndex == -1)
             {
                 MessageBox.Show("Неоткуда брать данные! (укажите окно загрузки данных сверху)");
+                dataConvert = null;
                 return;
             }
 
-            _dataTraining = new DataConvertToML(MainWindow.
-                MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
-                _dayPrdictionValue, _dataPredictionRows);
+            PrintLog($"Начата обработка {dataName} данных");
 
-            PrintDataConvertid(_dataTraining);
+            dataConvert = new DataConvertToML(MainWindow.
+                    MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
+                    _dayPrdictionValue, _dataPredictionRows);
+
+            /*await*/ dataConvert.Convert();
+
+            PrintLog($"Обработка {dataName} данных окончена: {dataConvert.GetSharisMLData.Length}");
+
+            PrintDataConvertid(dataConvert);
         }
 
-        private void ConvertTastingData(object sender, RoutedEventArgs e)
+        private void PrintDataConvertid(DataConvertToML dataConvert, int rows = 100)
         {
+            if (dataConvert == null)
+            {
+                return;
+            }
 
-        }
-
-        private void PrintDataConvertid(DataConvertToML dataConvert)
-        {
             DataText.Text = "";
 
-            for (int i = 0; i < _dataTraining.GetSharisMLData.Length; i++)
-                DataText.Text += _dataTraining.GetSharisMLData[i].ToString() + "\n";
+            StringBuilder stringBuilder = new StringBuilder();
+
+            int lengthOut = rows;
+            if (rows == -1)
+                lengthOut = dataConvert.GetSharisMLData.Length;
+
+            if (lengthOut > dataConvert.GetSharisMLData.Length)
+                lengthOut = dataConvert.GetSharisMLData.Length;
+
+            for (int i = 0; i < lengthOut; i++)
+                stringBuilder.Append(dataConvert.GetSharisMLData[i].ToString() + "\n");
+            DataText.Text = stringBuilder.ToString();
+        }
+
+        private async void BuildModel(object sender, RoutedEventArgs e)
+        {
+            if (_dataTraining == null)
+                return;
+
+            MLModelCreator mlModelCreate = new MLModelCreator();
+            mlModelCreate.BuildStart += MlModelCreate_BuildStart;
+            mlModelCreate.BuildEnd += MlModelCreate_BuildEnd;
+
+            await mlModelCreate.BuildModelAsync(_dataTraining.GetSharisMLData);
+
+            _mlModel = mlModelCreate;
+
+            mlModelCreate.BuildStart -= MlModelCreate_BuildStart;
+            mlModelCreate.BuildEnd -= MlModelCreate_BuildEnd;
+        }
+
+        private void MlModelCreate_BuildStart()
+        {
+            _timeModelCreatidStart = DateTime.Now;
+            PrintLog("Старт сборки модели \n");
+        }
+
+        private void MlModelCreate_BuildEnd()
+        {
+            _timeModelCreatidEnd = DateTime.Now;
+            TimeSpan timeSpan = _timeModelCreatidEnd - _timeModelCreatidStart;
+
+            PrintLog("Cборки модели завершена! Время сборки: "+ timeSpan.ToString("c"));
+        }
+
+        private void EvaluateModel(object sender, RoutedEventArgs e)
+        {
+            if (_dataTesting == null)
+                return;
+
+            _mlModel.Evaluate(_dataTesting.GetSharisMLData);
+
+            PrintLog(_mlModel.MetricInfo);
+        }
+
+        private void PrintLog(string logText)
+        {
+            OutText.Text += logText + '\n';
         }
     }
 }

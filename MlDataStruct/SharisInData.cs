@@ -6,18 +6,22 @@ namespace NeronkaFromShares.MlDataStruct
 {
     public class SharisInData //DateTime time, float open, float close, float high, float low, long volume
     {
+        [VectorType()]
         public DateTime[] time;
 
+        [VectorType()]
         public float[] open;
 
-        public float[] close;
+        [VectorType()]
+        public float[] close;       
 
-        public float high;
-
+        [VectorType()]
         public float[] low;
 
+        [VectorType()]
         public long[] volume;
 
+        public float high;
 
         public override string ToString()
         {

@@ -33,8 +33,14 @@
             <TextBox x:Name="DataPredictionRows" Margin="15,224,15,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Height="25" FontSize="16" TextChanged="DataPredictionRowsChange"/>
             <Label Content="Объём, Дней для одной обучающей выборки" Margin="0,254,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Stretch" HorizontalAlignment="Center"/>
 
+            <Button Content="Сделать модель" Margin="15,285,15,0" 
+                    VerticalAlignment="Top" Height="25" FontSize="16" Cursor="" Click="BuildModel"/>
+            <Button Content="Оценить модель" Margin="15,315,15,0" 
+                    VerticalAlignment="Top" Height="25" FontSize="16" Cursor="" Click="EvaluateModel"/>
+
         </Grid>
         <Grid Grid.Column="2">
+            <TextBox Name="OutText"></TextBox>
         </Grid>
     </Grid>
 </Window>
