@@ -23,6 +23,6 @@ public struct HistoricCandleToDB
 
     public override string ToString()
     {
-        return $"{Time} {Open:f2} {Close:f2} {High:f2} {Low:f2} {Volume}";
+        return $"{High:f2} {Time} {Open:f2} {Close:f2} {Low:f2} {Volume}";
     }
 }

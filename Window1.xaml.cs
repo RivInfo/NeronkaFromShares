@@ -21,6 +21,8 @@ namespace NeronkaFromShares
         private int _dayPrdictionValue = 1;
         private int _dataPredictionRows = 1;
 
+        private int _rowPredictionIndex = 0;
+
         private DataConvertToML _dataTraining;
         private DataConvertToML _dataTesting;
 
@@ -108,43 +110,11 @@ namespace NeronkaFromShares
 
         private async void ConvertTrainingData(object sender, RoutedEventArgs e)
         {
-            //if (DataLoaderComboBox.SelectedIndex == -1)
-            //{
-            //    MessageBox.Show("Неоткуда брать данные! (укажите окно загрузки данных сверху)");
-            //    return;
-            //}
-
-            //PrintLog("Начата обработка Тренировачных данных");
-
-            //_dataTraining = new DataConvertToML(MainWindow.
-            //    MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
-            //    _dayPrdictionValue, _dataPredictionRows);
-
-            //PrintDataConvertid(_dataTraining);
-
-            //PrintLog("Обработка Тренировачных данных окончена: " + _dataTraining.GetSharisMLData.Length);
-
             /*await*/ DataConvertLoad(ref _dataTraining, "Тренировачных");
         }
 
         private /*async*/ void ConvertTastingData(object sender, RoutedEventArgs e)
         {
-            //if (DataLoaderComboBox.SelectedIndex == -1)
-            //{
-            //    MessageBox.Show("Неоткуда брать данные! (укажите окно загрузки данных сверху)");
-            //    return;
-            //}
-
-            //PrintLog("Начата обработка Тестовых данных");
-
-            //_dataTesting = new DataConvertToML(MainWindow.
-            //    MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
-            //    _dayPrdictionValue, _dataPredictionRows);
-
-            //PrintDataConvertid(_dataTesting);
-
-            //PrintLog("Обработка Тестовых данных окончена: " + _dataTesting.GetSharisMLData.Length);
-
             /*await*/ DataConvertLoad(ref _dataTesting, "Тестовых");
         }
 
@@ -163,11 +133,18 @@ namespace NeronkaFromShares
                     MainWindows[DataLoaderComboBox.SelectedIndex].GetHistoricCandles,
                     _dayPrdictionValue, _dataPredictionRows);
 
-            /*await*/ dataConvert.Convert();
+            /*await*/
+            if (dataConvert.Convert())
+            {
+                PrintLog($"Обработка {dataName} данных окончена: {dataConvert.GetSharisMLData.Length}");
 
-            PrintLog($"Обработка {dataName} данных окончена: {dataConvert.GetSharisMLData.Length}");
-
-            PrintDataConvertid(dataConvert);
+                PrintDataConvertid(dataConvert);
+            }
+            else
+            {
+                PrintLog($"Что-то пошло не так! Обработка {dataName} данных не завершена.");
+                PrintLog("Число дней должно быть положительным.");
+            }
         }
 
         private void PrintDataConvertid(DataConvertToML dataConvert, int rows = 100)
@@ -188,8 +165,14 @@ namespace NeronkaFromShares
             if (lengthOut > dataConvert.GetSharisMLData.Length)
                 lengthOut = dataConvert.GetSharisMLData.Length;
 
+            for (int i = 0; i < dataConvert.GetSharisMLDataWithoutHigh.Length; i++)
+                stringBuilder.Append($"{i:d2} "+
+                    dataConvert.GetSharisMLDataWithoutHigh[i].ToString() + "\n");
+
             for (int i = 0; i < lengthOut; i++)
-                stringBuilder.Append(dataConvert.GetSharisMLData[i].ToString() + "\n");
+                stringBuilder.Append($"{i+ dataConvert.GetSharisMLDataWithoutHigh.Length:d2} " 
+                    + dataConvert.GetSharisMLData[i].ToString() + "\n");
+
             DataText.Text = stringBuilder.ToString();
         }
 
@@ -237,6 +220,45 @@ namespace NeronkaFromShares
         private void PrintLog(string logText)
         {
             OutText.Text += logText + '\n';
+        }
+
+        private void Prediction(object sender, RoutedEventArgs e)
+        {
+            if (_mlModel == null)
+                return;
+            if (_rowPredictionIndex < 0)
+                return;
+            if (_dataTesting==null)
+                return;
+            if (_rowPredictionIndex > _dataTesting.GetSharisMLData.Length +
+                _dataTesting.GetSharisMLDataWithoutHigh.Length)
+                return;
+
+
+            if (_rowPredictionIndex< _dataTesting.GetSharisMLDataWithoutHigh.Length)
+            {
+                PrintLog($"{_mlModel.OnePredict(_dataTesting.GetSharisMLDataWithoutHigh[_rowPredictionIndex])}");
+            }
+            else
+            {
+                PrintLog(_mlModel.OnePredict(_dataTesting.
+                    GetSharisMLData[_rowPredictionIndex - _dataTesting.GetSharisMLDataWithoutHigh.Length])
+                    + " " + _dataTesting.
+                    GetSharisMLData[_rowPredictionIndex - _dataTesting.GetSharisMLDataWithoutHigh.Length].high);
+            }           
+        }
+
+        private void RowPredictionIndexChange(object sender, TextChangedEventArgs e)
+        {
+            if (int.TryParse(RowIndex.Text, out int value))
+            {
+                _rowPredictionIndex = value;
+            }
+            else
+            {
+                MessageBox.Show(nameof(_rowPredictionIndex) + " Не число!");
+                DataPredictionRows.Text = _rowPredictionIndex.ToString();
+            }
         }
     }
 }

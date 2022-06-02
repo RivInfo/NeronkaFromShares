@@ -38,6 +38,11 @@
             <Button Content="Оценить модель" Margin="15,315,15,0" 
                     VerticalAlignment="Top" Height="25" FontSize="16" Cursor="" Click="EvaluateModel"/>
 
+            <Button Content="Предсказание" Margin="125,345,15,0" 
+                    VerticalAlignment="Top" Height="25" FontSize="16" Cursor="" Click="Prediction"/>
+            <TextBox x:Name="RowIndex" Margin="15,345,213,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Height="25" FontSize="16" TextChanged="RowPredictionIndexChange"/>
+
+
         </Grid>
         <Grid Grid.Column="2">
             <TextBox Name="OutText"></TextBox>

@@ -7,6 +7,7 @@ namespace NeronkaFromShares
     internal class DataConvertToML
     {
         private SharisInData[] _sharisInDatas;
+        private SharisInData[] _sharisInDatasWithoutHigh;
 
         private HistoricCandleToDB[] _historicCandles;
         private int _dayPrdiction;
@@ -20,9 +21,36 @@ namespace NeronkaFromShares
         }
 
         public SharisInData[] GetSharisMLData => _sharisInDatas;
+        public SharisInData[] GetSharisMLDataWithoutHigh => _sharisInDatasWithoutHigh;
 
-        public void Convert()
+        public bool Convert()
         {
+            if (_dayPrdiction <= 0 || _dayRows <= 0)
+                return false;
+
+            _sharisInDatasWithoutHigh = new SharisInData[_dayPrdiction];
+            for (int i = 0; i < _sharisInDatasWithoutHigh.Length; i++)
+            {
+                _sharisInDatasWithoutHigh[i] = new SharisInData();
+
+                _sharisInDatasWithoutHigh[i].time = new DateTime[_dayRows];
+                _sharisInDatasWithoutHigh[i].open = new float[_dayRows];
+                _sharisInDatasWithoutHigh[i].close = new float[_dayRows];
+                _sharisInDatasWithoutHigh[i].low = new float[_dayRows];
+                _sharisInDatasWithoutHigh[i].volume = new long[_dayRows];
+
+                _sharisInDatasWithoutHigh[i].high = 0;
+
+                for (int j = 0; j < _dayRows; j++)
+                {
+                    _sharisInDatasWithoutHigh[i].time[j] = _historicCandles[i + j].Time;
+                    _sharisInDatasWithoutHigh[i].open[j] = _historicCandles[i + j].Open;
+                    _sharisInDatasWithoutHigh[i].close[j] = _historicCandles[i + j].Close;
+                    _sharisInDatasWithoutHigh[i].low[j] = _historicCandles[i + j].Low;
+                    _sharisInDatasWithoutHigh[i].volume[j] = _historicCandles[i + j].Volume;
+                }
+            }
+
             _sharisInDatas = new SharisInData[_historicCandles.Length - _dayPrdiction - _dayRows];
             for (int i = _dayPrdiction; i < _historicCandles.Length - _dayRows; i++)
             {
@@ -47,6 +75,8 @@ namespace NeronkaFromShares
                     _sharisInDatas[index].volume[j] = _historicCandles[i + j].Volume;
                 }
             }
+
+            return true;
         }
 
         public async Task ConvertAsync()

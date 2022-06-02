@@ -27,19 +27,8 @@ namespace NeronkaFromShares
 
         public void BuildModel(SharisInData[] trainingData)
         {
-            SchemaDefinition autoSchema = SchemaDefinition.Create(typeof(SharisInData));
-            for (int i = 0; i < 5; i++)
-            {
-                var featureColumn = autoSchema[i];
-                var itemType = ((VectorDataViewType)featureColumn.ColumnType).ItemType;
-                featureColumn.ColumnType = new VectorDataViewType(itemType, trainingData[0].open.Length);
-            }          
-
             IDataView trainingDataView = _mlContext.Data.LoadFromEnumerable(trainingData, 
                 CreateSchema(trainingData[0].open.Length));
-
-            string info = trainingDataView.Schema[nameof(SharisInData.low)].
-                Type.RawType.MakeArrayType().ToString(); //as VectorDataViewType
 
             var dataProcessPipeline = _mlContext.Transforms.CopyColumns("Label", nameof(SharisInData.high))
                 //.Append(_mlContext.Transforms.Concatenate("Fetch1", nameof(SharisInData.low), 
