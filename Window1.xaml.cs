@@ -257,7 +257,7 @@ namespace NeronkaFromShares
             else
             {
                 MessageBox.Show(nameof(_rowPredictionIndex) + " Не число!");
-                DataPredictionRows.Text = _rowPredictionIndex.ToString();
+                RowIndex.Text = _rowPredictionIndex.ToString();
             }
         }
     }
